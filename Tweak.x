@@ -2,7 +2,6 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <objc/runtime.h>
 
-// --- Overlay Window Xuyên Thấu Cảm Ứng ---
 @interface DynamicIslandWindow : UIWindow
 @end
 
@@ -20,7 +19,6 @@
 }
 @end
 
-// --- Dynamic Island View Central Engine ---
 @interface DynamicIslandView : UIView
 @property (nonatomic, strong) UIImageView *appIconImageView;
 @property (nonatomic, strong) UILabel *titleLabel;
@@ -29,7 +27,7 @@
 @property (nonatomic, strong) NSTimer *autoCollapseTimer;
 
 + (instancetype)sharedInstance;
-- (void)triggerEventWithTitle:(NSString *)title subtitle:(NSString *)subtitle systemImage:(NSString *)systemImage customImage:(UIImage *)customImage duration:(NSTimeInterval)duration;
+- (void)triggerEventWithTitle:(NSString *)title subtitle:(NSString *)subtitle systemImage:(NSString *)systemImage duration:(NSTimeInterval)duration;
 - (void)collapseIsland;
 - (void)updateLayoutForOrientation:(UIInterfaceOrientation)orientation;
 @end
@@ -57,7 +55,6 @@
         self.layer.borderWidth = 0.5;
         self.layer.borderColor = [UIColor colorWithWhite:0.25 alpha:1.0].CGColor;
 
-        // Biểu tượng / Icon
         self.appIconImageView = [[UIImageView alloc] initWithFrame:CGRectMake(4, 3, 16, 16)];
         self.appIconImageView.layer.cornerRadius = 8;
         self.appIconImageView.clipsToBounds = YES;
@@ -65,14 +62,12 @@
         self.appIconImageView.tintColor = [UIColor whiteColor];
         [self addSubview:self.appIconImageView];
 
-        // Tiêu đề
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(24, 3, 85, 16)];
         self.titleLabel.textColor = [UIColor whiteColor];
         self.titleLabel.font = [UIFont systemFontOfSize:10 weight:UIFontWeightBold];
         self.titleLabel.alpha = 0.0;
         [self addSubview:self.titleLabel];
 
-        // Phụ đề
         self.subtitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(24, 22, 200, 14)];
         self.subtitleLabel.textColor = [UIColor lightGrayColor];
         self.subtitleLabel.font = [UIFont systemFontOfSize:9 weight:UIFontWeightRegular];
@@ -91,17 +86,14 @@
     }
 }
 
-// Hiệu ứng Spring Animation mượt chuẩn iOS 14 Pro
-- (void)triggerEventWithTitle:(NSString *)title subtitle:(NSString *)subtitle systemImage:(NSString *)systemImage customImage:(UIImage *)customImage duration:(NSTimeInterval)duration {
+- (void)triggerEventWithTitle:(NSString *)title subtitle:(NSString *)subtitle systemImage:(NSString *)systemImage duration:(NSTimeInterval)duration {
     self.isExpanded = YES;
     [self.autoCollapseTimer invalidate];
 
     self.titleLabel.text = title;
     self.subtitleLabel.text = subtitle;
 
-    if (customImage) {
-        self.appIconImageView.image = customImage;
-    } else if (systemImage && @available(iOS 13.0, *)) {
+    if (systemImage && @available(iOS 13.0, *)) {
         self.appIconImageView.image = [UIImage systemImageNamed:systemImage];
     }
 
@@ -173,10 +165,6 @@
 
 static DynamicIslandWindow *islandWindow = nil;
 
-// ==========================================
-// --- HOOK HỆ THỐNG TỰ ĐỘNG BẮT SỰ KIỆN ---
-// ==========================================
-
 %hook SpringBoard
 
 - (void)applicationDidFinishLaunching:(id)application {
@@ -193,20 +181,18 @@ static DynamicIslandWindow *islandWindow = nil;
         island.center = CGPointMake(mainScreen.bounds.size.width / 2.0, 11);
         [islandWindow addSubview:island];
 
-        // Lắng nghe trạng thái PIN / CẮM SẠC
         [[UIDevice currentDevice] setBatteryMonitoringEnabled:YES];
         [[NSNotificationCenter defaultCenter] addObserverForName:UIDeviceBatteryStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
             int level = (int)([UIDevice currentDevice].batteryLevel * 100);
             UIDeviceBatteryState state = [UIDevice currentDevice].batteryState;
             if (state == UIDeviceBatteryStateCharging || state == UIDeviceBatteryStateFull) {
                 NSString *batteryText = [NSString stringWithFormat:@"Đang sạc %d%%", level];
-                [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Đã kết nối nguồn điện" subtitle:batteryText systemImage:@"bolt.fill" customImage:nil duration:3.0];
+                [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Đã kết nối nguồn điện" subtitle:batteryText systemImage:@"bolt.fill" duration:3.0];
             }
         }];
     });
 }
 
-// Bắt xoay màn hình khi chơi game
 - (void)noteInterfaceOrientationChanged:(UIInterfaceOrientation)orientation duration:(double)duration logClassName:(id)arg3 {
     %orig;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -214,43 +200,4 @@ static DynamicIslandWindow *islandWindow = nil;
     });
 }
 
-%end
-
-// 1. Hook CUỘC GỌI TỚI (CallKit / Telephony)
-%hook TUCall
-- (void)setCallStatus:(int)status {
-    %orig;
-    if (status == 1) { // Inbound Call
-        NSString *callerName = [self performSelector:@selector(displayName)] ?: @"Cuộc gọi đến";
-        [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Cuộc gọi thoại" subtitle:callerName systemImage:@"phone.fill" customImage:nil duration:5.0];
-    }
-}
-%end
-
-// 2. Hook XÁC THỰC TOUCH ID / FACE ID
-%hook BiometricKit
-- (void)statusMessage:(unsigned int)message {
-    %orig;
-    if (message == 1) { // Success
-        [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Đã xác thực" subtitle:@"Face ID / Touch ID thành công" systemImage:@"checkmark.circle.fill" customImage:nil duration:2.0];
-    }
-}
-%end
-
-// 3. Hook SIRI ACTIVATION
-%hook SiriUICommandViewController
-- (void)viewWillAppear:(BOOL)animated {
-    %orig;
-    [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Siri" subtitle:@"Đang lắng nghe..." systemImage:@"mic.fill" customImage:nil duration:3.0];
-}
-%end
-
-// 4. Hook ĐỒNG HỒ ĐẾM GIỜ (Timer/Stopwatch)
-%hook MTTimer
-- (void)setState:(unsigned long long)state {
-    %orig;
-    if (state == 2) { // Running
-        [[DynamicIslandView sharedInstance] triggerEventWithTitle:@"Đồng hồ đếm giờ" subtitle:@"Đang đếm ngược..." systemImage:@"timer" customImage:nil duration:3.0];
-    }
-}
 %end
