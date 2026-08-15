@@ -20,9 +20,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential clang lld unzip curl git
 
-      - name: Setup Theos
+      - name: Setup RootHide Theos
         run: |
-          git clone --recursive https://github.com/theos/theos.git $HOME/theos
+          git clone --recursive https://github.com/roothide/theos.git $HOME/theos
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
       - name: Setup iOS SDK
