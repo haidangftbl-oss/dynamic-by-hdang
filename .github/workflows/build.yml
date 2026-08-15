@@ -16,7 +16,14 @@ jobs:
           submodules: recursive
 
       - name: Setup Theos
-        uses: theos/actions-setup-theos@v1
+        uses: theos/setup-theos@v1
+
+      - name: Setup iOS SDK
+        run: |
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip master.zip
+          mv sdks-master/* $THEOS/sdks/
+          rm -rf sdks-master master.zip
 
       - name: Build Package
         run: |
