@@ -15,14 +15,21 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang lld unzip curl git
+
       - name: Setup Theos
-        uses: theos/setup-theos@v1
+        run: |
+          git clone --recursive https://github.com/theos/theos.git $HOME/theos
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
       - name: Setup iOS SDK
         run: |
           curl -LO https://github.com/theos/sdks/archive/master.zip
           unzip master.zip
-          mv sdks-master/* $THEOS/sdks/
+          mv sdks-master/* $HOME/theos/sdks/
           rm -rf sdks-master master.zip
 
       - name: Build Package
