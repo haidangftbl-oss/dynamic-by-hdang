@@ -93,7 +93,7 @@
     self.titleLabel.text = title;
     self.subtitleLabel.text = subtitle;
 
-    if (systemImage && @available(iOS 13.0, *)) {
+    if (systemImage) {
         self.appIconImageView.image = [UIImage systemImageNamed:systemImage];
     }
 
