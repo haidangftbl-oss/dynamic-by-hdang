@@ -15,19 +15,8 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential clang lld unzip curl git
-
-      - name: Setup Theos & SDKs
-        run: |
-          git clone --recursive https://github.com/roothide/theos.git $HOME/theos
-          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
-          curl -LO https://github.com/theos/sdks/archive/master.zip
-          unzip master.zip
-          mv sdks-master/* $HOME/theos/sdks/
-          rm -rf sdks-master master.zip
+      - name: Setup Theos
+        uses: theos/actions-setup-theos@v1
 
       - name: Build Package
         run: |
