@@ -1,0 +1,31 @@
+name: Build Tweak .deb
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Theos
+        run: |
+          git clone --recursive https://github.com/roothide/theos.git $HOME/theos
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+
+      - name: Build Package
+        run: |
+          make package THEOS_PACKAGE_SCHEME=roothide FINALPACKAGE=1
+
+      - name: Upload .deb Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: DynamicIsland-deb
+          path: packages/*.deb
