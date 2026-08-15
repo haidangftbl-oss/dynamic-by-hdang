@@ -1,0 +1,9 @@
+Package: com.haidang.dynamicisland
+Name: DynamicIslandHome
+Depends: mobilesubstrate (>= 0.9.5000)
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Dynamic Island cho iPhone nut Home iOS 14-15 RootHide
+Maintainer: haidangftbl-oss
+Author: haidangftbl-oss
+Section: Tweaks
